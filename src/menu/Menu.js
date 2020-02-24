@@ -184,13 +184,13 @@ export default () => {
         setTree([...tree])
     }
 
-    function handleAdd(node, value, type) {
+    function add(node, value, type) {
         if (type === 'child' && !node.hasOwnProperty('children')) node.children = []
         let addArray
         deSelectNode(tree)
         node.addSibling && delete node.addSibling
         node.addChild && delete node.addChild
-        if (type = 'sibling') {
+        if (type === 'sibling') {
             const parent = findParent(tree, node)
             addArray = parent ? parent.children : tree
         } else {
@@ -204,7 +204,6 @@ export default () => {
         node.expanded = true
         setTree([...tree])
         containerRef.current.focus()
-        console.log('handleAdd')
     }
 
     const buildTree = (node) => {
@@ -215,7 +214,7 @@ export default () => {
             setTree([...tree])
         }
         const handleAdd = (value, type) => {
-            handleAdd(node, value, type);
+            add(node, value, type);
         }
         return <TreeNode
             key={nodeIx++}
