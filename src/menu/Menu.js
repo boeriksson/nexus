@@ -107,18 +107,125 @@ function findParent(tree, node) {
     return null
 }
 
+function getHandleKeyPress(keyMap) {
+    return (e) => {
+        const key =  e.keyCode || e.which
+        console.log('keyCode: ', key)
+        if (keyMap.hasOwnProperty(key)) {
+            keyMap[key](e)
+        }
+    }
+}
+
+function findNodeInFlatTree(tree) {
+    const flatTree = flattenTree(tree)
+    let ix = flatTree.findIndex(node => node.selected)
+    if (ix < 0) ix = 0
+
+    const hasChildren = flatTree[ix].children && flatTree[ix].children.length > 0;
+    return {flatTree, ix, hasChildren}
+}
+
+function spaceKey(tree, setTree) {
+    return () => { // 32: mellanslag  - toggle expanded
+        const {flatTree, ix, hasChildren} = findNodeInFlatTree(tree)
+        if (hasChildren) {
+            flatTree[ix].expanded = !flatTree[ix].expanded
+        }
+        setTree([...tree])
+    }
+}
+
+function leftArrowKey(tree, setTree) {
+    return (e) => {     // 37: vänster - parent
+        //             - if parent is root, nop
+        let {flatTree, ix} = findNodeInFlatTree(tree)
+        const level = flatTree[ix].level
+        if (level > 0) {
+            flatTree[ix].selected = false
+            while (flatTree[ix].level >= level) {
+                flatTree[ix].expanded = false
+                ix--
+            }
+            flatTree[ix].expanded = false
+            flatTree[ix].selected = true
+            e.preventDefault()
+        }
+        setTree([...tree])
+    }
+}
+
+function upArrowKey(tree, setTree) {
+    return (e) => { // 38: upp      - previos sibling
+        //              - if first child, parent
+        //              - if parent is root, select last child of root
+        const {flatTree, ix} = findNodeInFlatTree(tree)
+        flatTree[ix].selected = false
+        if (ix > 0) {
+            flatTree[ix - 1].selected = true
+        } else {
+            flatTree[flatTree.length - 1].selected = true
+        }
+        e.preventDefault()
+        setTree([...tree])
+    }
+}
+
+function rightArrowKey(tree, setTree) {
+    return (e) => { // 39: höger   - if children, select first child
+        const {flatTree, ix, hasChildren} = findNodeInFlatTree(tree)
+        const editKey = e.altKey || e.ctrlKey;
+        if (editKey && !hasChildren) {
+            flatTree[ix].addChild = true
+        }
+        if (hasChildren) {
+            flatTree[ix].selected = false
+            flatTree[ix].expanded = true
+            flatTree[ix].children[0].selected = true
+        }
+        e.preventDefault()
+        setTree([...tree])
+    }
+}
+
+function downArrowKey(tree, setTree) {
+    return (e) => {    // 40: ner     - next sibling
+        //             - if last, parents next sibling
+        //             - if root and bottom, select first child of root
+        const {flatTree, ix, hasChildren} = findNodeInFlatTree(tree)
+        const editKey = e.altKey || e.ctrlKey;
+        flatTree[ix].selected = false
+        if (editKey) {
+            flatTree[ix].addSibling = true
+        } else if (ix + 1 < flatTree.length) {
+            flatTree[ix + 1].selected = true
+        } else {
+            flatTree[0].selected = true
+        }
+        e.preventDefault()
+        setTree([...tree])
+    }
+}
+
+function tabKey(tree, setTree) {
+
+}
+
 export default () => {
     let nodeIx = 0
     const [tree, setTree] = useState(payload)
     const containerRef = createRef()
-    const handleKeyPress = (e) => {
+    const handleKeyPress = getHandleKeyPress({
+        32: spaceKey(tree, setTree),
+        37: leftArrowKey(tree, setTree),
+        38: upArrowKey(tree, setTree),
+        39: rightArrowKey(tree, setTree),
+        40: downArrowKey(tree, setTree),
+        9: tabKey(tree, setTree)
+    })
+    /*
+    const handleKeyPressOld = (e) => {
         const key =  e.keyCode || e.which
-
-        const flatTree = flattenTree(tree)
-        let ix = flatTree.findIndex(node => node.selected)
-        if (ix < 0) ix = 0
-
-        const hasChildren = flatTree[ix].children && flatTree[ix].children.length > 0;
         const editKey = e.altKey || e.ctrlKey;
 
         switch (key) {
@@ -183,6 +290,8 @@ export default () => {
         }
         setTree([...tree])
     }
+
+     */
 
     function add(node, value, type) {
         if (type === 'child' && !node.hasOwnProperty('children')) node.children = []
