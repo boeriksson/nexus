@@ -107,12 +107,13 @@ function findParent(tree, node) {
     return null
 }
 
-function getHandleKeyPress(keyMap) {
+function getHandleKeyPress(keyMap, after) {
     return (e) => {
         const key =  e.keyCode || e.which
         console.log('keyCode: ', key)
         if (keyMap.hasOwnProperty(key)) {
             keyMap[key](e)
+            after && after()
         }
     }
 }
@@ -126,17 +127,16 @@ function findNodeInFlatTree(tree) {
     return {flatTree, ix, hasChildren}
 }
 
-function spaceKey(tree, setTree) {
+function spaceKey(tree) {
     return () => { // 32: mellanslag  - toggle expanded
         const {flatTree, ix, hasChildren} = findNodeInFlatTree(tree)
         if (hasChildren) {
             flatTree[ix].expanded = !flatTree[ix].expanded
         }
-        setTree([...tree])
     }
 }
 
-function leftArrowKey(tree, setTree) {
+function leftArrowKey(tree) {
     return (e) => {     // 37: vänster - parent
         //             - if parent is root, nop
         let {flatTree, ix} = findNodeInFlatTree(tree)
@@ -151,11 +151,10 @@ function leftArrowKey(tree, setTree) {
             flatTree[ix].selected = true
             e.preventDefault()
         }
-        setTree([...tree])
     }
 }
 
-function upArrowKey(tree, setTree) {
+function upArrowKey(tree) {
     return (e) => { // 38: upp      - previos sibling
         //              - if first child, parent
         //              - if parent is root, select last child of root
@@ -167,11 +166,10 @@ function upArrowKey(tree, setTree) {
             flatTree[flatTree.length - 1].selected = true
         }
         e.preventDefault()
-        setTree([...tree])
     }
 }
 
-function rightArrowKey(tree, setTree) {
+function rightArrowKey(tree) {
     return (e) => { // 39: höger   - if children, select first child
         const {flatTree, ix, hasChildren} = findNodeInFlatTree(tree)
         const editKey = e.altKey || e.ctrlKey;
@@ -184,11 +182,10 @@ function rightArrowKey(tree, setTree) {
             flatTree[ix].children[0].selected = true
         }
         e.preventDefault()
-        setTree([...tree])
     }
 }
 
-function downArrowKey(tree, setTree) {
+function downArrowKey(tree) {
     return (e) => {    // 40: ner     - next sibling
         //             - if last, parents next sibling
         //             - if root and bottom, select first child of root
@@ -203,7 +200,6 @@ function downArrowKey(tree, setTree) {
             flatTree[0].selected = true
         }
         e.preventDefault()
-        setTree([...tree])
     }
 }
 
@@ -215,83 +211,15 @@ export default () => {
     let nodeIx = 0
     const [tree, setTree] = useState(payload)
     const containerRef = createRef()
+
     const handleKeyPress = getHandleKeyPress({
-        32: spaceKey(tree, setTree),
-        37: leftArrowKey(tree, setTree),
-        38: upArrowKey(tree, setTree),
-        39: rightArrowKey(tree, setTree),
-        40: downArrowKey(tree, setTree),
-        9: tabKey(tree, setTree)
-    })
-    /*
-    const handleKeyPressOld = (e) => {
-        const key =  e.keyCode || e.which
-        const editKey = e.altKey || e.ctrlKey;
-
-        switch (key) {
-            case 13:    // 13: enter - ladda content
-                break
-            case 32:    // 32: mellanslag  - toggle expanded
-                if (hasChildren) {
-                    flatTree[ix].expanded = !flatTree[ix].expanded
-                }
-                break
-            case 37:    // 37: vänster - parent
-                        //             - if parent is root, nop
-                const level = flatTree[ix].level
-                if (level > 0) {
-                    flatTree[ix].selected = false
-                    while (flatTree[ix].level >= level) {
-                        flatTree[ix].expanded = false
-                        ix--
-                    }
-                    flatTree[ix].expanded = false
-                    flatTree[ix].selected = true
-                    e.preventDefault()
-                }
-                break
-            case 38:    // 38: upp      - previos sibling
-                        //              - if first child, parent
-                        //              - if parent is root, select last child of root
-                flatTree[ix].selected = false
-                if (ix > 0) {
-                    flatTree[ix - 1].selected = true
-                } else {
-                    flatTree[flatTree.length - 1].selected = true
-                }
-                e.preventDefault()
-                break
-            case 39:    // 39: höger   - if children, select first child
-                if (editKey && !hasChildren) {
-                    flatTree[ix].addChild = true
-                }
-                if (hasChildren) {
-                    flatTree[ix].selected = false
-                    flatTree[ix].expanded = true
-                    flatTree[ix].children[0].selected = true
-                }
-                e.preventDefault()
-                break
-            case 9:     // 9: tab  - same as ner
-            case 40:    // 40: ner     - next sibling
-                        //             - if last, parents next sibling
-                        //             - if root and bottom, select first child of root
-                flatTree[ix].selected = false
-                if (editKey) {
-                    flatTree[ix].addSibling = true
-                } else if (ix + 1 < flatTree.length) {
-                    flatTree[ix + 1].selected = true
-                } else {
-                    flatTree[0].selected = true
-                }
-                e.preventDefault()
-                break
-            default:
-        }
-        setTree([...tree])
-    }
-
-     */
+        32: spaceKey(tree),
+        37: leftArrowKey(tree),
+        38: upArrowKey(tree),
+        39: rightArrowKey(tree),
+        40: downArrowKey(tree),
+        9: tabKey(tree)
+    }, () => setTree([...tree]))
 
     function add(node, value, type) {
         if (type === 'child' && !node.hasOwnProperty('children')) node.children = []
