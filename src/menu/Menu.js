@@ -208,7 +208,7 @@ function downArrowKey(tree, setTree) {
 }
 
 function tabKey(tree, setTree) {
-
+    return downArrowKey(tree, setTree)
 }
 
 export default () => {
