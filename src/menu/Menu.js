@@ -2,69 +2,12 @@ import React, {createRef, useState} from 'react'
 
 import {Container, TreeTopUL} from './menuStyle'
 import TreeNode from './TreeNode'
-
-const payload = [
-    {
-        label: "lövträd",
-        expanded: true,
-        children: [
-            {
-                id: 1,
-                label: "björk",
-                expanded: false,
-                children: [
-                    {
-                        id:2,
-                        label: "skogsbjörk"
-                    },
-                    {
-                        id: 3,
-                        label: "hängbjörk"
-                    }
-                ]
-            },
-            {
-                id: 4,
-                label: "ek",
-                expanded: true,
-                children: [
-                    {
-                        id: 5,
-                        label: "skogsek"
-                    },
-                    {
-                        id: 6,
-                        label: "rödek"
-                    },
-                    {
-                        id: 7,
-                        label: "korkek"
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        id: 8,
-        label: "barrträd",
-        expanded: false,
-        children: [
-            {
-                id: 9,
-                label: "tall"
-            },
-            {
-                id: 10,
-                label: "gran"
-            }
-        ]
-    }
-]
+import AddNode from './AddNode'
 
 function unSelectTree(tree) {
     tree.map(node => {
         if (node.children) unSelectTree(node.children)
-        if (node.selected) delete(node.selected)
+        if (node.selected) delete (node.selected)
     })
 }
 
@@ -109,7 +52,7 @@ function findParent(tree, node) {
 
 function getHandleKeyPress(keyMap, after) {
     return (e) => {
-        const key =  e.keyCode || e.which
+        const key = e.keyCode || e.which
         console.log('keyCode: ', key)
         if (keyMap.hasOwnProperty(key)) {
             keyMap[key](e)
@@ -207,9 +150,9 @@ function tabKey(tree, setTree) {
     return downArrowKey(tree, setTree)
 }
 
-export default () => {
+export default ({payload, loadWork}) => {
     let nodeIx = 0
-    const [tree, setTree] = useState(payload)
+    const [tree, setTree] = useState(payload || [])
     const containerRef = createRef()
 
     const handleKeyPress = getHandleKeyPress({
@@ -248,6 +191,7 @@ export default () => {
             if (node.children) node.expanded = !node.expanded
             unSelectTree(tree)
             node.selected = true
+            loadWork(node.id)
             setTree([...tree])
         }
         const handleAdd = (value, type) => {
@@ -263,10 +207,12 @@ export default () => {
     }
 
     return (
-        <Container tabIndex={-1} onKeyDown={handleKeyPress} ref={containerRef}>
-            <TreeTopUL>
-                {buildTree({children: payload, expanded: true}, 'root')}
-            </TreeTopUL>
-        </Container>
+        tree.length === 0
+            ? <AddNode add={add} type='sibling'/>
+            : <Container tabIndex={-1} onKeyDown={handleKeyPress} ref={containerRef}>
+                <TreeTopUL>
+                    {buildTree({children: payload, expanded: true}, 'root')}
+                </TreeTopUL>
+            </Container>
     )
 }
