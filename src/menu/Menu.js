@@ -1,5 +1,7 @@
-import React, {createRef, useState} from 'react'
+import React, {createRef} from 'react'
+import {connect, useSelector} from 'react-redux'
 
+import {updateTree} from './menuAction'
 import {Container, TreeTopUL} from './menuStyle'
 import TreeNode from './TreeNode'
 import AddNode from './AddNode'
@@ -146,13 +148,13 @@ function downArrowKey(tree) {
     }
 }
 
-function tabKey(tree, setTree) {
-    return downArrowKey(tree, setTree)
+function tabKey(tree, updateTree) {
+    return downArrowKey(tree, updateTree)
 }
 
-export default ({payload, loadWork}) => {
+const Menu = ({loadWork, tree}) => {
     let nodeIx = 0
-    const [tree, setTree] = useState(payload || [])
+    //const [tree, setTree] = useState(payload || [])
     const containerRef = createRef()
 
     const handleKeyPress = getHandleKeyPress({
@@ -162,7 +164,7 @@ export default ({payload, loadWork}) => {
         39: rightArrowKey(tree),
         40: downArrowKey(tree),
         9: tabKey(tree)
-    }, () => setTree([...tree]))
+    }, () => updateTree([...tree]))
 
     function add(node, value, type) {
         if (type === 'child' && !node.hasOwnProperty('children')) node.children = []
@@ -182,7 +184,7 @@ export default ({payload, loadWork}) => {
             selected: true
         })
         node.expanded = true
-        setTree([...tree])
+        updateTree([...tree])
         containerRef.current.focus()
     }
 
@@ -192,7 +194,7 @@ export default ({payload, loadWork}) => {
             unSelectTree(tree)
             node.selected = true
             loadWork(node.id)
-            setTree([...tree])
+            updateTree([...tree])
         }
         const handleAdd = (value, type) => {
             add(node, value, type);
@@ -211,8 +213,16 @@ export default ({payload, loadWork}) => {
             ? <AddNode add={add} type='sibling'/>
             : <Container tabIndex={-1} onKeyDown={handleKeyPress} ref={containerRef}>
                 <TreeTopUL>
-                    {buildTree({children: payload, expanded: true}, 'root')}
+                    {buildTree({children: tree, expanded: true}, 'root')}
                 </TreeTopUL>
             </Container>
     )
 }
+
+const mapDispatchToProps = {
+    updateTree
+}
+
+const mapStateToProps = (state) => ({tree: state.tree})
+
+export default connect(mapStateToProps, mapDispatchToProps)(Menu)

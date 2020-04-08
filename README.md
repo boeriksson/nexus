@@ -2,16 +2,16 @@
 
 An app to organise information...
 
-##Stack: 
+## Stack: 
 
-###Base
+### Base
 React
 Redux
 
-###Testing
+### Testing
 Jest
 Enzyme
 React-testing-library
 
-###Styling
+### Styling
 emotion
